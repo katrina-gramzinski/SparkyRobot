@@ -1,27 +1,11 @@
 /*
-  Ping))) Sensor
-
-  This sketch reads a PING))) ultrasonic rangefinder and returns the distance
-  to the closest object in range. To do this, it sends a pulse to the sensor to
-  initiate a reading, then listens for a pulse to return. The length of the
-  returning pulse is proportional to the distance of the object from the sensor.
-
-  The circuit:
-    - +V connection of the PING))) attached to +5V
-    - GND connection of the PING))) attached to ground
-    - SIG connection of the PING))) attached to digital pin 7
-
-  created 3 Nov 2008
-  by David A. Mellis
-  modified 30 Aug 2011
-  by Tom Igoe
-
-  This example code is in the public domain.
-
-  http://www.arduino.cc/en/Tutorial/Ping
+  This code was created by Joubel Boco, Katrina Gramzinski, and Marquel Hendricks in Fall 2018 for use on Sparky Robot (UMD ENEE408I).
+  
+  This code controls the two motors on the chassis, takes input from the Jetson TX2, and takes input from the three ping sensors.
+  
 */
 
-// this constant won't change. It's the pin number of the sensor's output:
+// setting pin numers for all of the necessary Arduino pins
 const int pingLeft = 2;
 const int pingMiddle = 7;
 const int pingRight = 13;
@@ -32,15 +16,15 @@ const int bPinLeft = 4;
 const int pwmLeft = 3;
 const int wheel_speed = 60;
 
-   
 const int enablePinRight = 8;
 const int aPinRight = 9;
 const int bPinRight = 10;
 const int pwmRight = 11;
 int output[3];
-int buf = 0 ;  
+int buf = 0 ;
+
 void setup() {
-  // initialize serial communication:
+  // initialize serial communication with Jetson:
   Serial.begin(9600);
   pinMode(aPinLeft, OUTPUT);
   pinMode(bPinLeft, OUTPUT);
@@ -54,6 +38,7 @@ void setup() {
    
 }
 
+// This loop constantly checks the input from the Jetson
 void loop() {
   incomingByte = Serial.read();
   if ( buf !=  incomingByte && incomingByte !=-1 ) {
@@ -74,35 +59,40 @@ void loop() {
    } 
 }
 
+// This is the only loop which takes input from the ping sensors. The application is "wandering" with obstacle avoidance.
 void roam(){
+  // Checks if the incoming byte from the Jetson is telling it to stop.
   while (incomingByte!=0) {
     checkPingSensors();
-//    Serial.print(output[0]);
-//    Serial.print(" ");
-//    Serial.println(output[1]);
-//    Serial.println(" ");
-//    Serial.println(output[2]);
+    // Checks if anything is closeby. output[0] is left ping, output[1] is middle ping, and output[2] is right ping.
     if (output[0] < 30 || output[1] < 30 || output[2] < 30) {
+      // if anything is VERY close to left or right, immediately turn the other way.
+      // Assumes we're not navigating down a very small hallway
+      // Uses wheel_speed-20 because the default speed was scarily fast for wandering.
       if (output[0] < 10)
-        right(wheel_speed-20);
+        right(wheel_speed-5);
       else if (output[2] < 10)
-        left(wheel_speed-20);
+        left(wheel_speed-5);
+      // otherwise, if there's a large distance ahead, move forward.
       else if (output[1] > 30) {
-        forward(wheel_speed-20);
+        forward(wheel_speed-5);
       }
+      // otherwise, if there's more space to the left, turn left
       else if (output[0] > output[2]) {
-        left(wheel_speed-20);
-        //delay(1000);
+        left(wheel_speed-5);
       }
+      // otherwise, turn right.
       else {
-        right(wheel_speed-20);
-        //delay(1000);
+        right(wheel_speed-5);
       }
     }
+    // if nothing closeby, move forward
     else
-      forward(wheel_speed-20);
+      forward(wheel_speed-5);
     delay(1);
+    // read the next incoming byte
     incomingByte = Serial.read();
+    // update the byte if necessary. Doesn't resave if there's no change to save computation time
     if ( buf !=  incomingByte && incomingByte !=-1 ) {
       buf = incomingByte;
       if (incomingByte == 0)
@@ -133,10 +123,8 @@ void checkPingSensors(){
 
   // convert the time into a distance
   cmLeft = microsecondsToCentimeters(durationLeft);
-
-  //Serial.print(cmLeft);
-  //Serial.print(" cm");
-  //Serial.print("\t");
+  
+  // save distance in cm to output
   output[0] = cmLeft;
 
   pinMode(pingMiddle, OUTPUT);
@@ -151,9 +139,7 @@ void checkPingSensors(){
 
   cmMiddle = microsecondsToCentimeters(durationMiddle);
   
-  //Serial.print(cmMiddle);
-  //Serial.print(" cm");
-  //Serial.print("\t");
+  // save distance in cm to output
   output[1] = cmMiddle;
 
   pinMode(pingRight, OUTPUT);
@@ -168,8 +154,7 @@ void checkPingSensors(){
 
   cmRight = microsecondsToCentimeters(durationRight);
   
-  //Serial.print(cmRight);
-  //Serial.println(" cm");
+  // save distance in cm to output
   output[2] = cmRight;
 
   delay(100);
