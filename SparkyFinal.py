@@ -3,7 +3,6 @@ from flask_ask import Ask, statement, question
 import thread
 
 
-#packages for follow me
 # import the necessary packages
 from collections import deque
 from imutils.video import VideoStream
@@ -16,7 +15,7 @@ import serial
 import struct
 import csv
 # open serial 
-valueToWrite= 250
+valueToWrite = 250
 ser = serial.Serial('/dev/ttyACM0',9600)
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -368,9 +367,7 @@ def updateHR():
 					globalCommand = "alert"
 					halt()
 					time.sleep(1.0)
-					print "calling respondAlert() - updateHR"
 					responseAlert = respondAlert()
-					print "returning response - updateHR"
 					if (responseAlert == "Sparky found you"):
 						globalMessage = ("Sparky found you. Your heartrate is abnormal. Are you okay?")
 						globalMessageReprompt = ("Say no i'm not to trigger an alert, or yes i am to dismiss")
@@ -381,7 +378,6 @@ def updateHR():
 						globalMessageReprompt = "What would you like Sparky to do now?"
 						
 					doneAlertRespond = 1
-					#delete this break for full functionality
 			i += 1
 
 def monitorHR():
@@ -389,9 +385,7 @@ def monitorHR():
 	return
 
 def respondAlert():
-	print "calling findLoop - respondAlert"
 	found = findLoop()
-	print "findLoop returned - respondAlert"
 	if (found == "Sparky found you!"):
 		return ("Sparky found you")
 	elif (found == "alert"):
